@@ -29,9 +29,31 @@ class Network(object):
         layer is assumed to be an input layer, and by convention we
         won't set any biases for those neurons, since biases are only
         ever used in computing the outputs from later layers."""
+
+        # each layer is a column of the network
         self.num_layers = len(sizes)
         self.sizes = sizes
+
+        # Each neuron has its own bias
+        # 2nd layer = [[a],[b],[c]] for a, b, c in [0, 1] 
+        # e.g. biases =   [ [[3],[2],[1]],  # first column
+        #                           [[2]]   # second column]
+        # in this example for sizes = [2, 3, 1]
+
+        # randn(m,n) makes an m x n matrix of values from standard distribution
         self.biases = [np.random.randn(y, 1) for y in sizes[1:]]
+
+        # zip connects the input with the hidden, and then the hidden with the
+        # output
+        # zip(sizes[:-1], sizes[1:]) creates a zip object (a pair)
+        # sizes[:-1] -> [2_input, 3_hidden)]
+        # sizes[1:] -> [3_hidden, 1_output]
+        # Links 2_input with 3_hidden and 3_hidden with 1_output
+        # {(2_input, 3_hidden), (3_hidden, 1_output)} 
+        # np.random.randn(2, 3)
+        # It creates a 2 x 3 array, then a 3 by 1 array in 3 dimensions where
+        # each value is in a list because of randn
+        # weights e.g. -> [ [[1,3,4],[2,3,2]] , [[1],[3],[4]] ]
         self.weights = [np.random.randn(y, x)
                         for x, y in zip(sizes[:-1], sizes[1:])]
 
