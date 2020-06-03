@@ -43,17 +43,18 @@ class Network(object):
         # randn(m,n) makes an m x n matrix of values from standard distribution
         self.biases = [np.random.randn(y, 1) for y in sizes[1:]]
 
-        # zip connects the input with the hidden, and then the hidden with the
-        # output
         # zip(sizes[:-1], sizes[1:]) creates a zip object (a pair)
         # sizes[:-1] -> [2_input, 3_hidden)]
         # sizes[1:] -> [3_hidden, 1_output]
-        # Links 2_input with 3_hidden and 3_hidden with 1_output
+        # Zip Links 2_input with 3_hidden and 3_hidden with 1_output
         # {(2_input, 3_hidden), (3_hidden, 1_output)} 
-        # np.random.randn(2, 3)
-        # It creates a 2 x 3 array, then a 3 by 1 array in 3 dimensions where
-        # each value is in a list because of randn
-        # weights e.g. -> [ [[1,3,4],[2,3,2]] , [[1],[3],[4]] ]
+        # np.random.randn(3, 2) creates a 3 x 2 array, then a 1 by 3 array in 3
+        # dimensions where each row is in a list.
+        # Weights \in M_{3,2} e.g. -> [ [[1,3], [2,4], [5,3]] , [[1, 3, 4]] ]
+        # The rows of the weights matrix represent the weights of every neuron
+        # in receiving column.
+        # The columns of the weights matrix represent the weights from each
+        # neuron in the previous column.
         self.weights = [np.random.randn(y, x)
                         for x, y in zip(sizes[:-1], sizes[1:])]
 
@@ -74,14 +75,28 @@ class Network(object):
         epoch, and partial progress printed out.  This is useful for
         tracking progress, but slows things down substantially."""
         if test_data: n_test = len(test_data)
+        # overall training data
         n = len(training_data)
+        # xrange - ~same as range in Python 3
         for j in xrange(epochs):
+            # Shuffle the batch, then split into different batches and update
+            # them
             random.shuffle(training_data)
+            # creates an list of size mini_batch_size containing    
+            # for (x,y) in training_data
+            # mini_batches =
+            #  [ [(x,y)_0, (x,y)_1, ... (x,y)_mini_batch_size]_0,
+            #    [(x,y)_0, (x,y)_1, ... (x,y)_mini_batch_size]_mini_batch_size,
+            #                       ...
+            #    [(x,y)_0, (x,y)_1, ... (x,y)_mini_batch_size]_n] ]
             mini_batches = [
-                training_data[k:k+mini_batch_size]
+                # k:k + mini_batch_size is a range from k to k + mini_batch_size
+                training_data[k:k + mini_batch_size]
+                # xrange (lower, upper, jump)
                 for k in xrange(0, n, mini_batch_size)]
             for mini_batch in mini_batches:
                 self.update_mini_batch(mini_batch, eta)
+            # printing out every Epoch
             if test_data:
                 print "Epoch {0}: {1} / {2}".format(
                     j, self.evaluate(test_data), n_test)
@@ -93,12 +108,23 @@ class Network(object):
         gradient descent using backpropagation to a single mini batch.
         The ``mini_batch`` is a list of tuples ``(x, y)``, and ``eta``
         is the learning rate."""
+        # vector.shape is the dimension of that vector
+        # np.zeros(shape) creates a vector of the given shape full of zeros
+
+        # nabla_b and nabla_w are the slight changes in biases and weights that 
+        # we adjust by Calculus methods
         nabla_b = [np.zeros(b.shape) for b in self.biases]
         nabla_w = [np.zeros(w.shape) for w in self.weights]
         for x, y in mini_batch:
+            # does delta nabla imply 2nd derivatives?
             delta_nabla_b, delta_nabla_w = self.backprop(x, y)
+
+            # nabla b = nabla b + delta nabla b for each item in the respective vectors
+            # nabla w = nabla w + delta nabla w for each item in the respective vectors 
             nabla_b = [nb+dnb for nb, dnb in zip(nabla_b, delta_nabla_b)]
             nabla_w = [nw+dnw for nw, dnw in zip(nabla_w, delta_nabla_w)]
+        # There is a negative because we want the opposite of the gradient
+        # because that is the way to minimize the cost function (the steepest descent)  
         self.weights = [w-(eta/len(mini_batch))*nw
                         for w, nw in zip(self.weights, nabla_w)]
         self.biases = [b-(eta/len(mini_batch))*nb
@@ -144,16 +170,21 @@ class Network(object):
         network outputs the correct result. Note that the neural
         network's output is assumed to be the index of whichever
         neuron in the final layer has the highest activation."""
+        # alg returns [0.3, 0.4, 0, 0.999, 0, 0, 0, 0, 0, 0.5] -> recognizes a 3
+        # expected is [0, 0, 0, 1, 0, 0, 0, 0, 0, 0] -> test is a handwritten 3
+        # np.argmax(list): returns the index of the max value of the list
         test_results = [(np.argmax(self.feedforward(x)), y)
                         for (x, y) in test_data]
         return sum(int(x == y) for (x, y) in test_results)
 
     def cost_derivative(self, output_activations, y):
         """Return the vector of partial derivatives \partial C_x /
-        \partial a for the output activations."""
-        return (output_activations-y)
+           \partial a for the output activations."""
+        return (output_activations - y)
 
 #### Miscellaneous functions
+# z is a vector 
+# sigmoid returns a vector with each value in it being sigmoid(elements of z)
 def sigmoid(z):
     """The sigmoid function."""
     return 1.0/(1.0+np.exp(-z))
