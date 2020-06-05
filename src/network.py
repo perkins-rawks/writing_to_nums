@@ -119,8 +119,10 @@ class Network(object):
             # does delta nabla imply 2nd derivatives?
             delta_nabla_b, delta_nabla_w = self.backprop(x, y)
 
-            # nabla b = nabla b + delta nabla b for each item in the respective vectors
-            # nabla w = nabla w + delta nabla w for each item in the respective vectors 
+            # nabla b = nabla b + delta nabla b for each item in the respective 
+            # vectors
+            # nabla w = nabla w + delta nabla w for each item in the respective 
+            # vectors 
             nabla_b = [nb+dnb for nb, dnb in zip(nabla_b, delta_nabla_b)]
             nabla_w = [nw+dnw for nw, dnw in zip(nabla_w, delta_nabla_w)]
         # There is a negative because we want the opposite of the gradient
@@ -138,18 +140,31 @@ class Network(object):
         nabla_b = [np.zeros(b.shape) for b in self.biases]
         nabla_w = [np.zeros(w.shape) for w in self.weights]
         # feedforward
+
+        # x is a handwritten image from the MNIST database
+        # x is a vector of grey scale values in the file
         activation = x
         activations = [x] # list to store all the activations, layer by layer
         zs = [] # list to store all the z vectors, layer by layer
+        # this runs once every connection
         for b, w in zip(self.biases, self.weights):
-            z = np.dot(w, activation)+b
+            # definition of z
+            z = np.dot(w, activation) + b
             zs.append(z)
+            # from book
             activation = sigmoid(z)
             activations.append(activation)
         # backward pass
-        delta = self.cost_derivative(activations[-1], y) * \
+
+        # the error - BP1
+        delta = self.cost_derivative(activations[-1], y)  *\
             sigmoid_prime(zs[-1])
+
+        # dC/db BP3
         nabla_b[-1] = delta
+
+        # dC/dw BP4
+        # It's transpose here is a Python-specific implementation of the equation
         nabla_w[-1] = np.dot(delta, activations[-2].transpose())
         # Note that the variable l in the loop below is used a little
         # differently to the notation in Chapter 2 of the book.  Here,
@@ -160,8 +175,13 @@ class Network(object):
         for l in xrange(2, self.num_layers):
             z = zs[-l]
             sp = sigmoid_prime(z)
+            # BP2
             delta = np.dot(self.weights[-l+1].transpose(), delta) * sp
+
+            # BP3
             nabla_b[-l] = delta
+
+            # BP4
             nabla_w[-l] = np.dot(delta, activations[-l-1].transpose())
         return (nabla_b, nabla_w)
 
